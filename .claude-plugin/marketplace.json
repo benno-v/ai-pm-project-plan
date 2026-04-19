@@ -1,0 +1,22 @@
+{
+  "name": "ai-pm-project-plan",
+  "owner": {
+    "name": "Benjamin Vermeulen",
+    "email": "benjamin.vermeulen.za@gmail.com"
+  },
+  "metadata": {
+    "description": "A PMBOK-aligned Project Plan Starter Pack for Claude. Produces a premium-editorial, client-ready Gantt chart and milestone tracker in three synchronised formats (Excel, interactive HTML, PowerPoint) from a structured project brief or an MCP-connected PM tool like Monday.com, ClickUp, Jira, or Asana. Supports per-client branding — primary and accent colour customisation, optional logo — so the same plan can ship across every account in your book.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "ai-pm-project-plan",
+      "description": "Generate a premium-editorial project plan package (Gantt + milestone tracker + status snapshot) across Excel, HTML, and PowerPoint. Designed for project managers who need consistent, brand-aligned, client-ready artefacts. Rebrandable per client with a primary colour, an accent colour, and an optional logo. Works from a structured project brief or live data pulled via MCP from Monday.com, ClickUp, Jira, Asana, or Linear.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/project-plan-generator"
+      ]
+    }
+  ]
+}

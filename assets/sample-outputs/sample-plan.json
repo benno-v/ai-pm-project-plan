@@ -1,0 +1,197 @@
+{
+  "project": {
+    "name": "Acme HQ Office Renovation",
+    "client": "Acme Corp",
+    "pm": "Benjamin Vermeulen",
+    "start": "2026-03-02",
+    "end": "2026-09-25",
+    "status_as_of": "2026-04-19",
+    "generated": "2026-04-19",
+    "logo_path": "acme-logo.png"
+  },
+  "brand": {
+    "primary": "#0B2545",
+    "accent": "#C49A3A",
+    "display_font": "Georgia",
+    "body_font": "Calibri"
+  },
+  "status_summary": "Design phase substantially complete. Permits are the current critical path with a five-day slip — mobilisation for construction is still tracking to 4 May.",
+  "phases": [
+    {"id": "P1", "name": "Design & Permits", "start": "2026-03-02", "end": "2026-05-01"},
+    {"id": "P2", "name": "Demolition & Structural", "start": "2026-05-04", "end": "2026-06-19"},
+    {"id": "P3", "name": "Fit-out & Services", "start": "2026-06-22", "end": "2026-08-28"},
+    {"id": "P4", "name": "Snagging & Handover", "start": "2026-08-31", "end": "2026-09-25"}
+  ],
+  "tasks": [
+    {
+      "id": "T01", "name": "Programme & brief",
+      "phase_id": "P1", "owner_role": "PM",
+      "start": "2026-03-02", "end": "2026-03-13", "duration_days": 10,
+      "status": "done", "progress": 1.0,
+      "is_milestone": false, "client_visible": true, "depends_on": []
+    },
+    {
+      "id": "T02", "name": "Concept design",
+      "phase_id": "P1", "owner_role": "Architect",
+      "start": "2026-03-16", "end": "2026-03-27", "duration_days": 10,
+      "status": "done", "progress": 1.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T01"]
+    },
+    {
+      "id": "T03", "name": "Detailed design",
+      "phase_id": "P1", "owner_role": "Architect",
+      "start": "2026-03-30", "end": "2026-04-17", "duration_days": 15,
+      "status": "done", "progress": 1.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T02"]
+    },
+    {
+      "id": "T04", "name": "Permit applications",
+      "phase_id": "P1", "owner_role": "Permit Consultant",
+      "start": "2026-04-06", "end": "2026-04-30", "duration_days": 19,
+      "status": "at_risk", "progress": 0.55,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T03"]
+    },
+    {
+      "id": "T05", "name": "Tender & contractor selection",
+      "phase_id": "P1", "owner_role": "PM",
+      "start": "2026-04-13", "end": "2026-05-01", "duration_days": 15,
+      "status": "in_progress", "progress": 0.35,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T03"]
+    },
+    {
+      "id": "T06", "name": "Site handover & mobilisation",
+      "phase_id": "P2", "owner_role": "Contractor",
+      "start": "2026-05-04", "end": "2026-05-08", "duration_days": 5,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T05"]
+    },
+    {
+      "id": "T07", "name": "Demolition",
+      "phase_id": "P2", "owner_role": "Contractor",
+      "start": "2026-05-11", "end": "2026-05-29", "duration_days": 15,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T06"]
+    },
+    {
+      "id": "T08", "name": "Structural alterations",
+      "phase_id": "P2", "owner_role": "Structural Engineer",
+      "start": "2026-06-01", "end": "2026-06-19", "duration_days": 15,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T07"]
+    },
+    {
+      "id": "T09", "name": "MEP first fix",
+      "phase_id": "P3", "owner_role": "Contractor",
+      "start": "2026-06-22", "end": "2026-07-24", "duration_days": 25,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T08"]
+    },
+    {
+      "id": "T10", "name": "Partitions & ceilings",
+      "phase_id": "P3", "owner_role": "Contractor",
+      "start": "2026-07-13", "end": "2026-08-07", "duration_days": 20,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T09"]
+    },
+    {
+      "id": "T11", "name": "Finishes",
+      "phase_id": "P3", "owner_role": "Contractor",
+      "start": "2026-08-03", "end": "2026-08-21", "duration_days": 15,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T10"]
+    },
+    {
+      "id": "T12", "name": "FF&E installation",
+      "phase_id": "P3", "owner_role": "FF&E Supplier",
+      "start": "2026-08-17", "end": "2026-08-28", "duration_days": 10,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T11"]
+    },
+    {
+      "id": "T13", "name": "Commissioning",
+      "phase_id": "P4", "owner_role": "Contractor",
+      "start": "2026-08-31", "end": "2026-09-11", "duration_days": 10,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T12"]
+    },
+    {
+      "id": "T14", "name": "Snagging & client sign-off",
+      "phase_id": "P4", "owner_role": "PM",
+      "start": "2026-09-14", "end": "2026-09-25", "duration_days": 10,
+      "status": "not_started", "progress": 0.0,
+      "is_milestone": false, "client_visible": true, "depends_on": ["T13"]
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M01", "name": "Concept design approved",
+      "date": "2026-03-27", "status": "achieved",
+      "owner_role": "Architect",
+      "description": "Client signed off the concept design and footprint.",
+      "client_visible": true
+    },
+    {
+      "id": "M02", "name": "Detailed design sign-off",
+      "date": "2026-04-17", "status": "achieved",
+      "owner_role": "Architect",
+      "description": "Detailed drawings, spec, and FF&E schedule approved.",
+      "client_visible": true
+    },
+    {
+      "id": "M03", "name": "Permits approved",
+      "date": "2026-04-30", "status": "at_risk",
+      "owner_role": "Permit Consultant",
+      "description": "City sign-off on building and mechanical permits. Currently five working days behind the target date.",
+      "client_visible": true
+    },
+    {
+      "id": "M04", "name": "Contractor appointed",
+      "date": "2026-05-01", "status": "on_track",
+      "owner_role": "PM",
+      "description": "Signed main contract with preferred contractor.",
+      "client_visible": true
+    },
+    {
+      "id": "M05", "name": "Site handover",
+      "date": "2026-05-08", "status": "on_track",
+      "owner_role": "Contractor",
+      "description": "Physical handover of the building to the main contractor for works.",
+      "client_visible": true
+    },
+    {
+      "id": "M06", "name": "Structural alterations complete",
+      "date": "2026-06-19", "status": "on_track",
+      "owner_role": "Structural Engineer",
+      "description": "All demolition and structural changes signed off by the engineer.",
+      "client_visible": true
+    },
+    {
+      "id": "M07", "name": "MEP first fix complete",
+      "date": "2026-07-24", "status": "on_track",
+      "owner_role": "Contractor",
+      "description": "Mechanical, electrical, and plumbing first fix signed off.",
+      "client_visible": true
+    },
+    {
+      "id": "M08", "name": "Practical completion",
+      "date": "2026-09-15", "status": "on_track",
+      "owner_role": "PM",
+      "description": "Building is safe to occupy; snag list issued.",
+      "client_visible": true
+    },
+    {
+      "id": "M09", "name": "Handover to client",
+      "date": "2026-09-25", "status": "on_track",
+      "owner_role": "PM",
+      "description": "All snags cleared, documentation and warranties transferred.",
+      "client_visible": true
+    }
+  ],
+  "flags": [
+    {
+      "scope": "milestones",
+      "ref": "M03",
+      "reason": "Permit sign-off is trending five working days behind the internal target. Recommend the client clears a pre-meeting slot with the city permits office in the next ten days to de-risk the 30 April date."
+    }
+  ]
+}
