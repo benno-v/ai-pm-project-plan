@@ -181,7 +181,7 @@ ai-pm-project-plan/
 
 ## Credits
 
-Built by [Benjamin Vermeulen](mailto:benjamin.vermeulen.za@gmail.com) — PMP, Program Director at Goodwall, founder of The Vermeulen Group.
+Built by [Benjamin Vermeulen] — PMP.
 
 Part of the *AI for Project Managers* content ecosystem. If you find this useful, the full walkthrough lives on Substack: [aiforprojectmanagers.substack.com](https://aiforprojectmanagers.substack.com).
 
