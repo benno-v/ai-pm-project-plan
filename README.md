@@ -2,7 +2,7 @@
 
 A Claude plugin that turns a messy project — scattered tasks in Monday.com, ClickUp, Jira, Asana, Linear, or a spreadsheet — into a premium-editorial, client-ready project plan package in three synchronised formats.
 
-Companion to the [AI for Project Managers](https://aiforprojectmanagers.substack.com) Substack, specifically the T11 article *Using Claude Cowork to Generate a Client Project Plan From Your PM Tool*.
+Companion to the [Benjamin Vermeulen](https://benjaminvermeulen.substack.com) Substack, specifically the T11 article *Using Claude Cowork to Generate a Client Project Plan From Your PM Tool*.
 
 ---
 
@@ -183,7 +183,7 @@ ai-pm-project-plan/
 
 Built by [Benjamin Vermeulen] — PMP.
 
-Part of the *AI for Project Managers* content ecosystem. If you find this useful, the full walkthrough lives on Substack: [benjaminvermeulen.substack.com](https://[benjaminvermeulen.substack.com/]).
+Part of the *AI for Project Managers* content ecosystem. If you find this useful, the full walkthrough lives on Substack: [Benjamin Vermeulen](https://benjaminvermeulen.substack.com).
 
 Issues, suggestions, and pull requests welcome.
 
