@@ -183,7 +183,7 @@ ai-pm-project-plan/
 
 Built by [Benjamin Vermeulen] — PMP.
 
-Part of the *AI for Project Managers* content ecosystem. If you find this useful, the full walkthrough lives on Substack: [aiforprojectmanagers.substack.com](https://aiforprojectmanagers.substack.com).
+Part of the *AI for Project Managers* content ecosystem. If you find this useful, the full walkthrough lives on Substack: [benjaminvermeulen.substack.com](https://[benjaminvermeulen.substack.com/]).
 
 Issues, suggestions, and pull requests welcome.
 
