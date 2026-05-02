@@ -2,7 +2,7 @@
 
 A Claude plugin that turns a messy project — scattered tasks in Monday.com, ClickUp, Jira, Asana, Linear, or a spreadsheet — into a premium-editorial, client-ready project plan package in three synchronised formats.
 
-Companion to the [Benjamin Vermeulen](https://benjaminvermeulen.substack.com) Substack, specifically the T11 article *Using Claude Cowork to Generate a Client Project Plan From Your PM Tool*.
+Companion to the [Benjamin Vermeulen](https://benjaminvermeulen.substack.com) Substack, specifically the article *Using Claude Cowork to Generate a Client Project Plan From Your PM Tool*.
 
 ---
 
