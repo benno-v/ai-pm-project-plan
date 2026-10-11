@@ -697,11 +697,19 @@ def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
         if seg_end >= seg_start:
             x1 = x_for(seg_start)
             x2 = x_for(seg_end) + (w_for(seg_end, seg_end))  # include last day
-            # Month label at x1
-            parts.append(
-                f'<text x="{x1 + 4}" y="{axis_y_month + 14}" class="month">'
-                f'{escape(_fmt_month(month_cursor).upper())}</text>'
-            )
+            # Month label at x1, shortened (or dropped) when the visible
+            # segment is too narrow, so it never runs past the chart edge.
+            avail = min(x2, SVG_WIDTH - RIGHT_PAD) - x1 - 6
+            label = _fmt_month(month_cursor).upper()
+            if len(label) * 8.6 > avail:
+                label = month_cursor.strftime("%b %y").upper()
+            if len(label) * 8.6 > avail:
+                label = month_cursor.strftime("%b").upper()
+            if len(label) * 8.6 <= avail:
+                parts.append(
+                    f'<text x="{x1 + 4}" y="{axis_y_month + 14}" class="month">'
+                    f'{escape(label)}</text>'
+                )
             # Thin divider between months
             parts.append(
                 f'<line x1="{x1}" y1="{axis_y_month + 2}" '
@@ -754,8 +762,10 @@ def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
             label_svg = ""
             if tier is not None:
                 label_y = mid_y + MS_DIAMOND + 13 if tier == 0 else mid_y - MS_DIAMOND - 7
+                half_w = (10 + len(_fmt_short(md)) * 7.5) / 2
+                lx = min(max(mx, LEFT_COL_W + half_w), SVG_WIDTH - RIGHT_PAD - half_w)
                 label_svg = (
-                    f'<text x="{mx}" y="{label_y}" text-anchor="middle" class="ms-label">'
+                    f'<text x="{lx}" y="{label_y}" text-anchor="middle" class="ms-label">'
                     f'{escape(_fmt_short(md))}</text>'
                 )
             parts.append(
@@ -789,7 +799,8 @@ def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
         pw = w_for(p_start, p_end)
         parts.append(
             f'<rect x="{px}" y="{y + 8}" width="{pw}" height="{PHASE_ROW_H - 16}" '
-            f'rx="2" ry="2" fill="{pal.primary_soft}"/>'
+            f'rx="2" ry="2" fill="{pal.primary_soft}" '
+            f'stroke="{pal.primary}" stroke-opacity="0.45" stroke-width="1"/>'
         )
         y += PHASE_ROW_H
 

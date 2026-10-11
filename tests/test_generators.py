@@ -145,3 +145,23 @@ class GeneratorSmokeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PhasesOnlyPlanTests(unittest.TestCase):
+    """A plan with phases and milestones but no tasks (a 'simplified client update')."""
+
+    FIXTURE = Path(__file__).parent / "fixtures" / "phases-only-plan.json"
+
+    def test_all_formats_generate_and_labels_stay_inside_the_chart(self) -> None:
+        import re
+        with tempfile.TemporaryDirectory() as tmp:
+            for ext in ("html", "pptx", "xlsx", "pdf"):
+                out = Path(tmp) / f"plan.{ext}"
+                result = _run(f"generate_{ext}.py", self.FIXTURE, out)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertGreater(out.stat().st_size, 0)
+            html = (Path(tmp) / "plan.html").read_text()
+            self.assertEqual(html.count('class="ms-diamond"'), 4)
+            self.assertNotIn("DECEMBER 2026</text>", html)  # too narrow: shortened label
+            for x in re.findall(r'<text x="([\d.]+)"[^>]*class="ms-label"', html):
+                self.assertLessEqual(float(x), 1008)

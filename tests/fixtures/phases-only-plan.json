@@ -1,0 +1,90 @@
+{
+  "project": {
+    "name": "Northwind Website Redesign (fictional)",
+    "client": "Northwind",
+    "pm": "Project Manager",
+    "start": "2026-09-01",
+    "end": "2026-12-15",
+    "status_as_of": "2026-10-11",
+    "generated": "2026-10-11"
+  },
+  "brand": {
+    "primary": "#0B2545",
+    "accent": "#C49A3A",
+    "display_font": "Georgia",
+    "body_font": "Calibri"
+  },
+  "status_summary": "Discovery and Design are underway; Kickoff is complete. Design sign-off is trending slightly behind schedule and needs client attention, while Build and Launch remain on track for the planned Go-live date.",
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Discovery",
+      "start": "2026-09-01",
+      "end": "2026-09-21"
+    },
+    {
+      "id": "P2",
+      "name": "Design",
+      "start": "2026-09-22",
+      "end": "2026-10-10"
+    },
+    {
+      "id": "P3",
+      "name": "Build",
+      "start": "2026-10-11",
+      "end": "2026-11-20"
+    },
+    {
+      "id": "P4",
+      "name": "Launch",
+      "start": "2026-11-21",
+      "end": "2026-12-15"
+    }
+  ],
+  "tasks": [],
+  "milestones": [
+    {
+      "id": "M1",
+      "name": "Kickoff",
+      "date": "2026-09-01",
+      "status": "done",
+      "owner_role": "PM",
+      "description": "Project kickoff with client and delivery team.",
+      "client_visible": true
+    },
+    {
+      "id": "M2",
+      "name": "Design sign-off",
+      "date": "2026-10-10",
+      "status": "at_risk",
+      "owner_role": "PM",
+      "description": "Client approval of final design direction before build begins.",
+      "client_visible": true
+    },
+    {
+      "id": "M3",
+      "name": "Beta live",
+      "date": "2026-11-20",
+      "status": "in_progress",
+      "owner_role": "PM",
+      "description": "Beta version of the redesigned site available for review.",
+      "client_visible": true
+    },
+    {
+      "id": "M4",
+      "name": "Go-live",
+      "date": "2026-12-15",
+      "status": "in_progress",
+      "owner_role": "PM",
+      "description": "Public launch of the redesigned website.",
+      "client_visible": true
+    }
+  ],
+  "flags": [
+    {
+      "scope": "milestones",
+      "ref": "M2",
+      "reason": "Design sign-off is at risk of slipping past the 10 October target. We need the client's design feedback confirmed this week to avoid a knock-on delay to Build."
+    }
+  ]
+}

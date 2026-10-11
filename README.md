@@ -1,5 +1,7 @@
 # Project Plan Generator: a Claude plugin by SI with Ben
 
+![Project Plan Generator by SI with Ben](assets/preview.png)
+
 I built this plugin so I could stop rebuilding the same Gantt chart, milestone tracker, and status deck by hand for every client. Point it at a brief, a Monday.com board, or a pasted task list, and it produces a premium-editorial, client-ready project plan package in four synchronised formats: Excel, interactive HTML, PowerPoint, and PDF.
 
 By Benjamin Vermeulen, [@SIwithBen](https://www.youtube.com/@SIwithBen)

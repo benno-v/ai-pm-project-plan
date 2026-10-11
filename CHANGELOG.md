@@ -3,6 +3,8 @@
 All notable changes to this plugin are documented here.
 
 ## 1.1.0 (2026-10-11)
+- Gantt edge cases: month labels shorten instead of clipping at the chart edge, milestone labels stay inside the chart, phase bars are outlined so phases-only plans stay readable.
+- Phases-only test fixture and a 1200x630 preview image.
 
 ### Added
 
