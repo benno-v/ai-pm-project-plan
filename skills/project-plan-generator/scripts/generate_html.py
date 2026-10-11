@@ -6,9 +6,12 @@ The HTML is premium editorial — large serif display type, generous white
 space, muted off-white background, restrained accent colour, and a single
 SVG-based Gantt chart so the artefact stays vector-sharp at any zoom.
 
-The file is fully self-contained: one .html that opens offline in any
-modern browser. Google Fonts are loaded via ``<link>`` with a system-font
-fallback so the page reads cleanly even when offline.
+The file is fully self-contained and dependency-free: one .html that opens
+offline in any modern browser, with no reliance on Google Fonts or any other
+CDN (system font stack only, by default). It is also responsive from ~600px
+up and carries a @media print stylesheet, which ``generate_pdf.py`` reuses
+to render a print-quality PDF of the same page. Set ``brand.web_fonts: true``
+in the plan JSON to opt into loading Fraunces/Inter from Google Fonts.
 
 Usage
 -----
@@ -89,8 +92,25 @@ def _milestone_meta(status: str) -> tuple[str, str]:
         "achieved": ("Achieved", "ms-achieved"),
         "on_track": ("On track", "ms-on-track"),
         "at_risk":  ("At risk",  "ms-at-risk"),
+        "slipping": ("Slipping", "ms-at-risk"),
         "slipped":  ("Slipped",  "ms-slipped"),
+        "delayed":  ("Delayed",  "ms-slipped"),
+        "blocked":  ("Blocked",  "ms-slipped"),
     }.get(status, ("—", "ms-on-track"))
+
+
+def _milestone_fill(status: str, pal: Palette) -> str:
+    """Diamond/dot fill colour for a milestone status — shared by the Gantt row
+    and the milestone timeline so the two read as one system."""
+    return {
+        "achieved": pal.ok,
+        "on_track": pal.primary,
+        "at_risk":  pal.warn,
+        "slipping": pal.warn,
+        "slipped":  pal.risk,
+        "delayed":  pal.risk,
+        "blocked":  pal.risk,
+    }.get(status, pal.primary)
 
 
 # ---------------------------------------------------------------------------
@@ -281,6 +301,9 @@ body {{
   padding: 0 8px;
   overflow-x: auto;
 }}
+.gantt {{
+  min-width: {gantt_min_width}px;
+}}
 .gantt svg {{ display: block; width: 100%; height: auto; }}
 .gantt text.month {{
   font-family: var(--font-body);
@@ -321,28 +344,48 @@ body {{
   fill: var(--accent);
   text-transform: uppercase;
 }}
+.gantt text.ms-row-label {{
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  fill: var(--primary-dark);
+  text-transform: uppercase;
+}}
+.gantt text.ms-label {{
+  font-family: var(--font-body);
+  font-size: 9px;
+  fill: var(--ink-soft);
+}}
+.gantt .ms-diamond {{
+  stroke: var(--page);
+  stroke-width: 1;
+}}
 
 /* --- Milestones --- */
 .milestones-timeline {{
   position: relative;
-  padding: 32px 0 40px;
+  overflow-x: auto;
+  padding: 32px 4px 40px;
   margin-bottom: 24px;
   border-bottom: 1px solid var(--hairline);
 }}
-.timeline-line {{
+.timeline-dots {{
+  position: relative;
+  display: flex;
+  gap: 4px;
+  min-width: max-content;
+}}
+.timeline-dots::before {{
+  content: "";
   position: absolute;
   left: 0; right: 0; top: 50%;
   height: 1px;
   background: var(--hairline);
 }}
-.timeline-dots {{
-  position: relative;
-  display: grid;
-  gap: 4px;
-  grid-template-columns: repeat({milestone_count}, 1fr);
-}}
 .dot {{
   position: relative;
+  flex: 0 0 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -371,7 +414,8 @@ body {{
   font-size: 13px;
   color: var(--ink);
   margin-top: 4px;
-  max-width: 140px;
+  max-width: 112px;
+  line-height: 1.25;
 }}
 
 .milestone-list {{
@@ -475,11 +519,62 @@ footer img {{
   opacity: 0.85;
 }}
 
+/* --- Responsive (down to ~600px) --- */
+@media (max-width: 760px) {{
+  .page {{ padding: 40px 20px 72px; }}
+  .hero {{ flex-direction: column; gap: 20px; }}
+  .project-title {{ font-size: 34px; }}
+  .hero-sub {{ font-size: 15px; }}
+  .snapshot {{ grid-template-columns: repeat(2, 1fr); }}
+  .card {{ border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }}
+  .card:nth-child(2n) {{ border-right: 0; }}
+  .card .value {{ font-size: 28px; }}
+  .summary {{ padding: 24px; }}
+  .summary p {{ font-size: 17px; }}
+  .section-head {{ flex-direction: column; align-items: flex-start; gap: 4px; }}
+  .milestone-list {{ grid-template-columns: 1fr; }}
+  footer {{ flex-direction: column; align-items: flex-start; gap: 8px; }}
+}}
+
 /* --- Print --- */
 @media print {{
   body {{ background: var(--page); }}
-  .page {{ box-shadow: none; max-width: 100%; padding: 24px 16px; }}
-  .section {{ page-break-inside: avoid; }}
+  .page {{ box-shadow: none; max-width: 100%; padding: 10px 16px; }}
+
+  /* Keep short, self-contained blocks from splitting across a page
+     boundary — but don't force whole (possibly page-plus-tall) sections
+     to avoid breaking, which strands headings alone on an otherwise
+     empty page. */
+  .card, .summary, .milestone-card, .dot, .review li {{
+    break-inside: avoid;
+  }}
+  .hero, .snapshot {{ break-inside: avoid; }}
+
+  /* One deliberate break before the schedule, so the Gantt always starts
+     flush at the top of its own page instead of drifting part-way down
+     whatever page it happened to land on. */
+  .schedule-section {{ break-before: page; }}
+  .milestones-section {{ break-before: page; }}
+
+  .section {{ margin: 16px 0; }}
+  .section-head {{ margin-bottom: 14px; padding-bottom: 8px; }}
+  .summary {{ margin: 16px 0; padding: 20px 28px 20px 24px; }}
+  .snapshot {{ margin: 24px 0; }}
+  .review {{ margin-top: 12px; padding: 16px 24px; }}
+  .review h3 {{ margin: 0 0 8px; }}
+  footer {{ margin-top: 10px; padding-top: 8px; }}
+
+  .gantt-wrap, .milestones-timeline {{ overflow: visible; }}
+  .gantt {{ min-width: 0; }}
+  /* Scale the whole Gantt — heading included — to fit one landscape page
+     tall, so it's never clipped and never pushed to share a page with
+     only part of itself visible. Width stays 100% (no horizontal
+     clipping, every month stays visible); only the height is capped, and
+     the SVG's own viewBox keeps everything in proportion. */
+  .gantt svg {{ max-height: 64vh; width: auto; max-width: 100%; margin: 0 auto; }}
+
+  .timeline-dots {{ min-width: 0; flex-wrap: wrap; }}
+  @page {{ size: A4 landscape; margin: 10mm; }}
 }}
 """
 
@@ -492,34 +587,78 @@ footer img {{
 SVG_WIDTH = 1008
 LEFT_COL_W = 260
 RIGHT_PAD = 16
+TODAY_FLAG_H = 16  # dedicated strip above the month row for the TODAY pill,
+                    # so it never collides with a month label
 HEADER_MONTH_H = 22
 HEADER_WEEK_H = 16
-HEADER_TOTAL_H = HEADER_MONTH_H + HEADER_WEEK_H + 12
+HEADER_TOTAL_H = TODAY_FLAG_H + HEADER_MONTH_H + HEADER_WEEK_H + 12
 PHASE_ROW_H = 30
-TASK_ROW_H = 26
+TASK_ROW_H = 34
 BAR_H = 12
+MS_ROW_H = 42
+MS_DIAMOND = 6  # half-diagonal, in px
+MS_LABEL_GAP = 10  # minimum horizontal gap between two labels in the same tier
+
+# Minimum pixel width the Gantt is allowed to shrink to before the page's
+# horizontal-scroll container kicks in, so text never has to compress below
+# a readable size on narrow (e.g. 600px) viewports.
+GANTT_MIN_WIDTH = SVG_WIDTH
+
+
+def _layout_milestone_markers(
+    milestones: list[dict[str, Any]], start: date, end: date, x_for,
+) -> list[tuple[float, date, dict[str, Any], int | None]]:
+    """Return (x, date, milestone, tier) for every in-range milestone.
+
+    ``tier`` is 0 (label below the diamond), 1 (label above), or ``None`` —
+    every milestone always gets its diamond, but if a cluster is so dense
+    that neither tier has room for its date label without colliding with a
+    neighbour, the label is dropped rather than left to overlap (the full
+    name/date is still available via the diamond's tooltip, and in the
+    milestone cards below).
+    """
+    points: list[tuple[float, date, dict[str, Any]]] = []
+    for m in milestones:
+        md = _parse_date(m["date"])
+        if not (start <= md <= end):
+            continue
+        points.append((x_for(md), md, m))
+    points.sort(key=lambda p: p[0])
+
+    tier_right = [float("-inf"), float("-inf")]
+    out: list[tuple[float, date, dict[str, Any], int | None]] = []
+    for x, md, m in points:
+        label_w = 10 + len(_fmt_short(md)) * 7.5
+        half = label_w / 2
+        if x - half >= tier_right[0] + MS_LABEL_GAP:
+            tier = 0
+        elif x - half >= tier_right[1] + MS_LABEL_GAP:
+            tier = 1
+        else:
+            tier = None
+        if tier is not None:
+            tier_right[tier] = x + half
+        out.append((x, md, m, tier))
+    return out
 
 
 def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
     proj = plan["project"]
     tasks = plan.get("tasks", [])
     phases = plan.get("phases", [])
+    milestones = plan.get("milestones", [])
 
     start = _parse_date(proj["start"])
     end = _parse_date(proj["end"])
     today = _parse_date(proj["status_as_of"])
     total_days = max(1, _days_between(start, end) + 1)
 
-    # Compute row count to size SVG
-    row_count = 0
-    for ph in phases:
-        row_count += 1  # phase header row
-        row_count += sum(1 for t in tasks if t.get("phase_id") == ph["id"])
+    ms_row_h = MS_ROW_H if milestones else 0
 
     chart_w = SVG_WIDTH - LEFT_COL_W - RIGHT_PAD
-    svg_h = HEADER_TOTAL_H + row_count * TASK_ROW_H + 10  # close enough for phase rows too
-    # Recalculate precise height
-    precise_h = HEADER_TOTAL_H
+
+    # Precise height: header + optional milestones row + phase/task rows
+    precise_h = HEADER_TOTAL_H + ms_row_h
     for ph in phases:
         precise_h += PHASE_ROW_H
         precise_h += TASK_ROW_H * sum(1 for t in tasks if t.get("phase_id") == ph["id"])
@@ -539,8 +678,8 @@ def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
 
     # Month + week axis
     month_cursor = date(start.year, start.month, 1)
-    axis_y_month = 0
-    axis_y_week = HEADER_MONTH_H
+    axis_y_month = TODAY_FLAG_H
+    axis_y_week = TODAY_FLAG_H + HEADER_MONTH_H
     parts.append(
         f'<line x1="{LEFT_COL_W}" y1="{HEADER_TOTAL_H - 1}" '
         f'x2="{SVG_WIDTH - RIGHT_PAD}" y2="{HEADER_TOTAL_H - 1}" '
@@ -589,8 +728,49 @@ def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
                 )
         cur += timedelta(days=7)
 
-    # Rows
+    # Milestones row — diamonds on their own dedicated row, drawn ON the
+    # schedule rather than only in the separate milestone timeline below.
     y = HEADER_TOTAL_H
+    if milestones:
+        parts.append(
+            f'<rect x="0" y="{y}" width="{SVG_WIDTH}" height="{ms_row_h}" fill="{pal.card}"/>'
+        )
+        parts.append(
+            f'<text x="12" y="{y + ms_row_h - 10}" class="ms-row-label">MILESTONES</text>'
+        )
+        mid_y = y + ms_row_h / 2
+        parts.append(
+            f'<line x1="{LEFT_COL_W}" y1="{mid_y}" x2="{SVG_WIDTH - RIGHT_PAD}" y2="{mid_y}" '
+            f'stroke="{pal.hairline}" stroke-width="1"/>'
+        )
+        for mx, md, m, tier in _layout_milestone_markers(milestones, start, end, x_for):
+            fill = _milestone_fill(m.get("status", "on_track"), pal)
+            points = (
+                f"{mx},{mid_y - MS_DIAMOND} "
+                f"{mx + MS_DIAMOND},{mid_y} "
+                f"{mx},{mid_y + MS_DIAMOND} "
+                f"{mx - MS_DIAMOND},{mid_y}"
+            )
+            label_svg = ""
+            if tier is not None:
+                label_y = mid_y + MS_DIAMOND + 13 if tier == 0 else mid_y - MS_DIAMOND - 7
+                label_svg = (
+                    f'<text x="{mx}" y="{label_y}" text-anchor="middle" class="ms-label">'
+                    f'{escape(_fmt_short(md))}</text>'
+                )
+            parts.append(
+                f'<g><title>{escape(m.get("name", ""))} — {escape(_fmt_long(md))} '
+                f'({escape(m.get("status", "on_track"))})</title>'
+                f'<polygon class="ms-diamond" points="{points}" fill="{fill}"/>'
+                f'{label_svg}</g>'
+            )
+        parts.append(
+            f'<line x1="0" y1="{y + ms_row_h}" x2="{SVG_WIDTH}" y2="{y + ms_row_h}" '
+            f'stroke="{pal.hairline}" stroke-width="1"/>'
+        )
+        y += ms_row_h
+
+    # Rows
     for ph in phases:
         p_start = _parse_date(ph["start"])
         p_end = _parse_date(ph["end"])
@@ -628,10 +808,10 @@ def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
 
             # Task name + owner
             parts.append(
-                f'<text x="24" y="{y + 17}" class="task">{escape(t["name"])}</text>'
+                f'<text x="24" y="{y + 15}" class="task">{escape(t["name"])}</text>'
             )
             parts.append(
-                f'<text x="24" y="{y + TASK_ROW_H - 4}" class="owner">'
+                f'<text x="24" y="{y + TASK_ROW_H - 6}" class="owner">'
                 f'{escape(t.get("owner_role", ""))}</text>'
             )
 
@@ -663,15 +843,26 @@ def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
 
             y += TASK_ROW_H
 
-    # Today marker
+    # Today marker — the pill lives in its own strip above the month row so
+    # it never overlaps a month label, and is horizontally clamped so it
+    # never clips off the left/right edge of the chart.
     if start <= today <= end:
         tx = x_for(today)
         parts.append(
-            f'<line x1="{tx}" y1="{HEADER_MONTH_H - 4}" x2="{tx}" y2="{svg_h - 6}" '
+            f'<line x1="{tx}" y1="{TODAY_FLAG_H - 2}" x2="{tx}" y2="{svg_h - 6}" '
             f'stroke="{pal.accent}" stroke-width="1.5" stroke-dasharray="2 3"/>'
         )
+        pill_w, pill_h = 46, 14
+        cx = min(
+            max(tx, LEFT_COL_W + pill_w / 2 + 2),
+            SVG_WIDTH - RIGHT_PAD - pill_w / 2 - 2,
+        )
         parts.append(
-            f'<text x="{tx + 4}" y="{HEADER_MONTH_H - 6}" class="today-label">TODAY</text>'
+            f'<rect x="{cx - pill_w / 2}" y="1" width="{pill_w}" height="{pill_h}" '
+            f'rx="7" ry="7" fill="{pal.accent_soft}"/>'
+        )
+        parts.append(
+            f'<text x="{cx}" y="{pill_h - 2}" text-anchor="middle" class="today-label">TODAY</text>'
         )
 
     # Column divider between left pane and chart
@@ -688,14 +879,23 @@ def _fmt_svg(plan: dict[str, Any], pal: Palette) -> str:
 # HTML assembly
 # ---------------------------------------------------------------------------
 
-def _font_stack(display: str, body: str) -> tuple[str, str]:
-    """Return CSS font stacks for display + body fonts."""
-    display_stack = (
-        f'"{display}", "Fraunces", "Georgia", "Times New Roman", serif'
+def _font_stack(display: str, body: str, web_fonts: bool) -> tuple[str, str]:
+    """Return CSS font stacks for display + body fonts.
+
+    No Google Fonts dependency by default — these are pure system-font
+    stacks, so the page renders identically offline or inside a sandboxed
+    preview iframe that blocks external requests. If ``web_fonts`` is
+    explicitly enabled in ``brand``, "Fraunces"/"Inter" are added ahead of
+    the system fallback (see the optional ``<link>`` tags in the page head).
+    """
+    display_lead = ['"Fraunces"'] if web_fonts else []
+    body_lead = ['"Inter"'] if web_fonts else []
+    display_stack = ", ".join(
+        [f'"{display}"'] + display_lead + ['Georgia', '"Times New Roman"', "serif"]
     )
-    body_stack = (
-        f'"{body}", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", '
-        f'Helvetica, Arial, sans-serif'
+    body_stack = ", ".join(
+        [f'"{body}"'] + body_lead +
+        ["-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Helvetica", "Arial", "sans-serif"]
     )
     return display_stack, body_stack
 
@@ -721,9 +921,11 @@ def generate_html(plan: dict[str, Any], plan_path: Path, pal: Palette) -> str:
     else:
         health_label, health_class = "On track", "health-on-track"
 
-    display_font = plan.get("brand", {}).get("display_font") or DEFAULT_DISPLAY_FONT_HTML
-    body_font = plan.get("brand", {}).get("body_font") or DEFAULT_BODY_FONT_HTML
-    display_stack, body_stack = _font_stack(display_font, body_font)
+    brand = plan.get("brand", {})
+    display_font = brand.get("display_font") or DEFAULT_DISPLAY_FONT_HTML
+    body_font = brand.get("body_font") or DEFAULT_BODY_FONT_HTML
+    web_fonts = bool(brand.get("web_fonts"))
+    display_stack, body_stack = _font_stack(display_font, body_font, web_fonts)
 
     logo_path = resolve_logo(proj.get("logo_path"), plan_path)
     logo_uri = _img_to_data_uri(logo_path) if logo_path else None
@@ -739,8 +941,22 @@ def generate_html(plan: dict[str, Any], plan_path: Path, pal: Palette) -> str:
         risk=pal.risk, risk_soft=pal.risk_soft,
         display_font_stack=display_stack,
         body_font_stack=body_stack,
-        milestone_count=max(1, len(milestones)),
+        gantt_min_width=GANTT_MIN_WIDTH,
     )
+
+    # Google Fonts are opt-in only (``brand.web_fonts: true``) — by default
+    # the page depends on nothing outside the file itself, so it renders
+    # correctly offline and inside sandboxed preview iframes that block
+    # third-party requests.
+    web_fonts_html = ""
+    if web_fonts:
+        web_fonts_html = (
+            '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+            '<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;'
+            '9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" '
+            'rel="stylesheet">'
+        )
 
     # Snapshot cards
     cards_html = f"""
@@ -793,7 +1009,7 @@ def generate_html(plan: dict[str, Any], plan_path: Path, pal: Palette) -> str:
     # Schedule / Gantt
     svg = _fmt_svg(plan, pal)
     schedule_html = f"""
-    <section class="section">
+    <section class="section schedule-section">
       <div class="section-head">
         <h2>Schedule</h2>
         <span class="count">{len(tasks)} tasks · {len(plan.get('phases', []))} phases</span>
@@ -830,13 +1046,12 @@ def generate_html(plan: dict[str, Any], plan_path: Path, pal: Palette) -> str:
         """
 
     milestones_html = f"""
-    <section class="section">
+    <section class="section milestones-section">
       <div class="section-head">
         <h2>Milestones</h2>
         <span class="count">{achieved} achieved · {total_ms - achieved} ahead</span>
       </div>
       <div class="milestones-timeline">
-        <div class="timeline-line"></div>
         <div class="timeline-dots">{timeline_dots}</div>
       </div>
       <div class="milestone-list">{milestone_cards}</div>
@@ -879,9 +1094,7 @@ def generate_html(plan: dict[str, Any], plan_path: Path, pal: Palette) -> str:
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>{escape(proj['name'])} — Project status</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{web_fonts_html}
 <style>{css}</style>
 </head>
 <body>

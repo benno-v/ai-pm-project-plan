@@ -123,8 +123,8 @@ DEFAULT_ACCENT = "#C49A3A"    # warm muted gold
 DEFAULT_DISPLAY_FONT_PPTX = "Georgia"             # serif, widely installed
 DEFAULT_BODY_FONT_PPTX = "Calibri"                # sans, default on Windows/Mac
 
-DEFAULT_DISPLAY_FONT_HTML = "Fraunces"            # Google serif, editorial
-DEFAULT_BODY_FONT_HTML = "Inter"                  # Google sans
+DEFAULT_DISPLAY_FONT_HTML = "Georgia"             # system serif — no webfont required
+DEFAULT_BODY_FONT_HTML = "Segoe UI"                # system sans — no webfont required
 
 DEFAULT_FONT_XLSX = "Calibri"                     # Excel-safe
 

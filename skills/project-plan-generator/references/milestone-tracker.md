@@ -30,13 +30,13 @@ Valid statuses: `achieved`, `on_track`, `at_risk`, `slipping`, `delayed`, `block
 
 ## How milestones render
 
-Each format shows milestones differently but they read as one consistent object:
+Each format shows milestones twice: once drawn directly on the schedule (so the Gantt alone tells the milestone story), and once in a dedicated milestone view with full names, descriptions, and status chips.
 
-**PowerPoint** — own slide titled "Milestone tracker". A horizontal track plots every milestone as a dot coloured by status. Up to six feature cards below the track show name, date, description, and status chip. The latest achieved milestone anchors the feature set, with upcoming milestones filling the rest.
+**PowerPoint** — the Timeline overview and Detail Gantt slides both carry a "Milestones" row with every in-range milestone drawn as a diamond coloured by status; date labels stagger above/below to avoid collisions, and a label is dropped (diamond only) rather than overlapping a neighbour in a dense cluster. There's also a dedicated "Milestone tracker" slide: a horizontal track plots every milestone as a dot coloured by status, with up to six feature cards below showing name, date, description, and status chip. The latest achieved milestone anchors the feature set, with upcoming milestones filling the rest.
 
-**HTML** — integrated into the scrolling page. The timeline track runs across the full width with dots at scale; each milestone also appears as a card in a grid below, with the same status chip and description.
+**HTML** — the SVG Gantt has its own "Milestones" row at the top, diamonds at scale coloured by status with the same collision-avoidance as PowerPoint (a `<title>` tooltip always carries the full name/date/status, even when the label is dropped). Below the Gantt, the milestone timeline track runs across the full width (horizontally scrollable on narrow viewports) with dots at scale; each milestone also appears as a card in a grid below, with the same status chip and description.
 
-**Excel** — dedicated "Milestones" sheet. Six-column table: ID, name, date, status (as a coloured chip cell), owner role, description. Sorted chronologically.
+**Excel** — the "Gantt" sheet opens with a "Milestones" block: one row per milestone, with a ◆ marker dropped into its week column (plus a cell comment carrying the full name/date/status) so milestones read on the same weekly grid as the tasks. There's also a dedicated "Milestones" sheet: a six-column table — ID, name, date, status (as a coloured chip cell), owner role, description — sorted chronologically.
 
 ## Writing good milestone descriptions
 

@@ -167,6 +167,8 @@ All three generators share these behaviours:
 
 **Progress fill.** The completed portion of each task bar is filled in the accent colour; the remainder uses a soft neutral or, for at-risk work, a warm soft fill. The progress fraction is taken from the `progress` field verbatim — it is not recalculated from dates.
 
+**Milestones on the schedule.** Every Gantt-bearing surface (the HTML SVG, the PPTX Timeline overview and Detail Gantt slides, the XLSX Gantt sheet) draws milestones directly on the schedule — not only on their own dedicated slide/sheet — as a status-coloured diamond at the milestone's date, on a shared "Milestones" row/block. Where two milestones are close enough in date that their labels would collide, the later one's label is dropped rather than left to overlap (the diamond and a tooltip/comment with the full name still render).
+
 **Duration-weighted overall progress.** The "overall complete" headline is the sum of `duration_days × progress` divided by the sum of `duration_days`. Zero-duration tasks and milestones are excluded.
 
 **Next milestone.** The snapshot card picks the first milestone on or after `status_as_of` that has not been achieved. If every remaining milestone is in the past it falls back to the earliest non-achieved one.

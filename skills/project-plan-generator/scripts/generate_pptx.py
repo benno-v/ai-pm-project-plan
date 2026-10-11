@@ -76,6 +76,7 @@ STATUS_COLOUR_MAP = {
     "in_progress": "ok",
     "at_risk": "warn",
     "slipping": "warn",
+    "slipped": "risk",
     "delayed": "risk",
     "blocked": "risk",
     "cancelled": "ink_faint",
@@ -156,6 +157,58 @@ def _month_starts(start: date, end: date) -> list[date]:
     return out
 
 
+MS_DIAMOND_SIZE = Inches(0.14)
+MS_LABEL_GAP = Inches(0.08)
+
+
+def _draw_milestones_row(slide, plan: dict, palette: Palette, *,
+                         chart_left, chart_w, start: date, end: date,
+                         total_days: int, row_cy, diamond_size=MS_DIAMOND_SIZE):
+    """Draw every in-range milestone as a diamond on a shared horizontal row,
+    staggering the date labels above/below to avoid collisions — mirrors the
+    layout used for the HTML Gantt's milestones row. Every milestone always
+    gets its diamond; if a cluster is too dense for either tier to fit the
+    date label without colliding with a neighbour, that label is dropped
+    rather than left to overlap (the name/date is still on the dedicated
+    Milestones slide)."""
+    points = []
+    for m in plan.get("milestones", []):
+        md = _parse_date(m.get("date"))
+        if not md or md < start or md > end:
+            continue
+        x = chart_left + int(chart_w * ((md - start).days / max(1, total_days)))
+        points.append((x, md, m))
+    points.sort(key=lambda p: p[0])
+
+    tier_right = [-10 ** 9, -10 ** 9]
+    for x, md, m in points:
+        status = m.get("status", "on_track")
+        colour_key = STATUS_COLOUR_MAP.get(status, "ink_faint")
+        fill_hex = getattr(palette, colour_key, palette.ink_faint)
+        _diamond(slide, x, row_cy, diamond_size, fill_hex=fill_hex, line_hex=palette.page)
+
+        label = _format_short_date(md)
+        label_w = Inches(0.15 * max(4, len(label)))
+        half = label_w / 2
+        if x - half >= tier_right[0] + MS_LABEL_GAP:
+            tier = 0
+        elif x - half >= tier_right[1] + MS_LABEL_GAP:
+            tier = 1
+        else:
+            tier = None
+
+        if tier is None:
+            continue
+        tier_right[tier] = x + half
+        label_y = (row_cy + diamond_size / 2 + Inches(0.02) if tier == 0
+                   else row_cy - diamond_size / 2 - Inches(0.2))
+        _textbox(
+            slide, x - half, label_y, label_w, Inches(0.18),
+            label, font_name=palette.body_font, size_pt=7.5,
+            colour_hex=palette.ink_soft, align="center",
+        )
+
+
 # ---------------------------------------------------------------------------
 # Shape helpers
 # ---------------------------------------------------------------------------
@@ -209,6 +262,19 @@ def _round_rect(slide, x, y, w, h, fill_hex: Optional[str] = None,
 def _ellipse(slide, x, y, w, h, fill_hex: Optional[str] = None,
              line_hex: Optional[str] = None):
     shp = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, w, h)
+    if fill_hex is None:
+        _set_no_fill(shp)
+    else:
+        _set_fill(shp, fill_hex)
+    _set_line(shp, line_hex)
+    shp.shadow.inherit = False
+    return shp
+
+
+def _diamond(slide, cx, cy, size, fill_hex: Optional[str] = None,
+             line_hex: Optional[str] = None):
+    """A diamond centred on ``(cx, cy)`` — used for milestone markers."""
+    shp = slide.shapes.add_shape(MSO_SHAPE.DIAMOND, cx - size / 2, cy - size / 2, size, size)
     if fill_hex is None:
         _set_no_fill(shp)
     else:
@@ -709,8 +775,27 @@ def build_timeline_overview(prs: Presentation, plan: dict, palette: Palette,
             _line(slide, x, chart_top + header_h,
                   x, chart_bottom, palette.hairline, 0.4)
 
+    # Milestones row — drawn on the schedule itself, above the phase bars
+    has_ms = bool(plan.get("milestones"))
+    ms_band_h = Inches(0.5) if has_ms else Inches(0)
+    if has_ms:
+        _textbox(
+            slide, PAGE_MARGIN_L, chart_top + header_h + Inches(0.06),
+            chart_left - PAGE_MARGIN_L - Inches(0.2), Inches(0.22),
+            "MILESTONES",
+            font_name=palette.body_font, size_pt=8,
+            colour_hex=palette.ink_faint, bold=True,
+        )
+        ms_row_cy = chart_top + header_h + Inches(0.06) + Inches(0.22)
+        _draw_milestones_row(
+            slide, plan, palette, chart_left=chart_left, chart_w=chart_w,
+            start=start, end=end, total_days=total_days, row_cy=ms_row_cy,
+        )
+        _line(slide, chart_left, ms_row_cy + Inches(0.22),
+              chart_right, ms_row_cy + Inches(0.22), palette.hairline, 0.4)
+
     # Phase rows
-    row_top = chart_top + header_h + Inches(0.25)
+    row_top = chart_top + header_h + ms_band_h + Inches(0.25)
     row_h = Inches(0.55)
     row_gap = Inches(0.16)
 
@@ -861,6 +946,26 @@ def build_detail_gantt(prs: Presentation, plan: dict, palette: Palette,
             _line(slide, x, chart_top + header_h,
                   x, chart_bottom, palette.hairline, 0.4)
 
+    # Milestones row — drawn on the schedule itself, above the task bars
+    has_ms = bool(plan.get("milestones"))
+    ms_band_h = Inches(0.42) if has_ms else Inches(0)
+    if has_ms:
+        _textbox(
+            slide, PAGE_MARGIN_L, chart_top + header_h + Inches(0.04),
+            chart_left - PAGE_MARGIN_L - Inches(0.2), Inches(0.2),
+            "MILESTONES",
+            font_name=palette.body_font, size_pt=7.5,
+            colour_hex=palette.ink_faint, bold=True,
+        )
+        ms_row_cy = chart_top + header_h + Inches(0.04) + Inches(0.2)
+        _draw_milestones_row(
+            slide, plan, palette, chart_left=chart_left, chart_w=chart_w,
+            start=start, end=end, total_days=total_days, row_cy=ms_row_cy,
+            diamond_size=Inches(0.12),
+        )
+        _line(slide, chart_left, ms_row_cy + Inches(0.2),
+              chart_right, ms_row_cy + Inches(0.2), palette.hairline, 0.4)
+
     # Sort tasks by phase order then start date
     phase_order = {p.get("id"): idx for idx, p in enumerate(phases)}
     tasks_sorted = sorted(
@@ -869,7 +974,7 @@ def build_detail_gantt(prs: Presentation, plan: dict, palette: Palette,
                        _parse_date(t.get("start")) or date.max),
     )
 
-    available_h = chart_bottom - chart_top - header_h
+    available_h = chart_bottom - chart_top - header_h - ms_band_h
     max_rows = max(5, int(available_h / Inches(0.32)))
     tasks_to_show = tasks_sorted[:max_rows]
 
@@ -877,10 +982,11 @@ def build_detail_gantt(prs: Presentation, plan: dict, palette: Palette,
     if row_h > Inches(0.45):
         row_h = Inches(0.45)
     bar_h = Inches(0.20)
+    rows_top = chart_top + header_h + ms_band_h
 
     current_phase_id = None
     for i, t in enumerate(tasks_to_show):
-        y = chart_top + header_h + row_h * i + (row_h - bar_h) / 2
+        y = rows_top + row_h * i + (row_h - bar_h) / 2
 
         # Subtle phase band (row shading alternates by phase)
         if t.get("phase_id") != current_phase_id:
@@ -897,7 +1003,7 @@ def build_detail_gantt(prs: Presentation, plan: dict, palette: Palette,
 
         # Left: task name
         _textbox(
-            slide, PAGE_MARGIN_L, chart_top + header_h + row_h * i,
+            slide, PAGE_MARGIN_L, rows_top + row_h * i,
             chart_left - PAGE_MARGIN_L - Inches(0.2), row_h,
             t.get("name", ""),
             font_name=palette.body_font, size_pt=9.5,
@@ -908,7 +1014,7 @@ def build_detail_gantt(prs: Presentation, plan: dict, palette: Palette,
         # — fit into same row via the right side of the name column
         _textbox(
             slide, PAGE_MARGIN_L + Inches(1.75),
-            chart_top + header_h + row_h * i,
+            rows_top + row_h * i,
             Inches(0.9), row_h,
             t.get("owner_role", ""),
             font_name=palette.body_font, size_pt=8,

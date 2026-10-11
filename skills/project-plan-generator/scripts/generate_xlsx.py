@@ -35,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from brand import derive_palette, resolve_logo, Palette, DEFAULT_FONT_XLSX  # noqa: E402
 
 from openpyxl import Workbook  # noqa: E402
+from openpyxl.comments import Comment  # noqa: E402
 from openpyxl.drawing.image import Image as XLImage  # noqa: E402
 from openpyxl.formatting.rule import DataBarRule  # noqa: E402
 from openpyxl.styles import (  # noqa: E402
@@ -341,6 +342,63 @@ def build_gantt(wb: Workbook, plan: dict[str, Any], pal: Palette) -> None:
     first_data_row = header_row_week + 1
     row = first_data_row
     progress_ranges: list[str] = []
+
+    # Milestones — a dedicated block at the top of the schedule, each row a
+    # milestone with a diamond marker dropped into its week column so the
+    # milestone is drawn on the Gantt itself, not just on its own sheet.
+    milestones = sorted(
+        plan.get("milestones", []), key=lambda m: _parse_date(m["date"])
+    )
+    if milestones:
+        ws.row_dimensions[row].height = 22
+        ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=5)
+        mh = ws.cell(row=row, column=2, value="MILESTONES")
+        mh.font = Font(name=DEFAULT_FONT_XLSX, size=9, bold=True, color=_hex(pal.primary_dark))
+        mh.alignment = Alignment(vertical="center")
+        for col_letter in "BCDE":
+            ws[f"{col_letter}{row}"].border = Border(
+                top=Side(style="thin", color=_hex(pal.rule)),
+                bottom=Side(style="thin", color=_hex(pal.hairline)),
+            )
+        row += 1
+
+        for m in milestones:
+            ws.row_dimensions[row].height = 20
+            md = _parse_date(m["date"])
+            status = m.get("status", "on_track")
+            label, fill_hex, text_hex = _milestone_chip(status, pal)
+
+            ws.cell(row=row, column=2, value="  ◆ " + m["name"]).font = Font(
+                name=DEFAULT_FONT_XLSX, size=11, color=_hex(pal.ink)
+            )
+            ws.cell(row=row, column=3, value=m.get("owner_role", "")).font = Font(
+                name=DEFAULT_FONT_XLSX, size=10, color=_hex(pal.ink_soft)
+            )
+            ws.cell(row=row, column=4, value=_fmt_date(md)).font = Font(
+                name=DEFAULT_FONT_XLSX, size=10, color=_hex(pal.ink_soft)
+            )
+            status_cell = ws.cell(row=row, column=5, value=label)
+            status_cell.font = Font(name=DEFAULT_FONT_XLSX, size=9, bold=True, color=_hex(text_hex))
+
+            mon = _monday(md)
+            for i, wk in enumerate(weeks):
+                if wk != mon:
+                    continue
+                col = GANTT_FIRST_WEEK_COL + i
+                cell = ws.cell(row=row, column=col, value="◆")
+                cell.font = Font(name=DEFAULT_FONT_XLSX, size=12, bold=True, color=_hex(text_hex))
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+                cell.comment = Comment(
+                    f"{m['name']} — {md.strftime('%d %B %Y')} ({label})",
+                    "Project Plan Generator",
+                )
+                break
+
+            for col_letter in "BCDE":
+                ws[f"{col_letter}{row}"].border = Border(
+                    bottom=Side(style="dotted", color=_hex(pal.hairline))
+                )
+            row += 1
 
     for phase in phases:
         phase_id = phase["id"]

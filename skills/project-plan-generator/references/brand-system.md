@@ -56,10 +56,13 @@ Fonts are set per-format so the same plan still looks right in each tool:
 | Format | Display default | Body default | Notes                                                     |
 |--------|-----------------|--------------|-----------------------------------------------------------|
 | PPTX   | Georgia         | Calibri      | Both ship with Windows and Mac.                           |
-| HTML   | Fraunces        | Inter        | Loaded from Google Fonts via CDN link in the HTML head.   |
+| HTML   | Georgia         | Segoe UI     | Pure system font stack — no webfont download by default.  |
 | XLSX   | Calibri         | Calibri      | Excel-safe. Display fields use 22pt+ Calibri bold.        |
+| PDF    | (same as HTML)  | (same as HTML) | Renders the HTML page's print stylesheet, so it inherits whatever HTML resolved to. |
 
-If `brand.display_font` or `brand.body_font` are set in the plan, they override the PPTX and (in theory) HTML defaults — but only if the font is available on the rendering machine. For bulletproof portability, leave them unset unless you have a reason.
+If `brand.display_font` or `brand.body_font` are set in the plan, they override the defaults above — but only if the font is available on the rendering machine. For bulletproof portability, leave them unset unless you have a reason.
+
+Set `brand.web_fonts: true` to make the HTML (and therefore the PDF) load Fraunces/Inter from Google Fonts instead of the system stack. This is opt-in and off by default: the HTML page is meant to render identically offline and inside sandboxed preview iframes that block third-party requests, and a CDN font request would silently break that guarantee.
 
 ## Logo handling
 
@@ -78,6 +81,7 @@ If none of these find the file, the logo is silently skipped and the generators 
 - **PowerPoint.** Appears in the footer of every slide, bottom-left, next to the project signature line.
 - **HTML.** Appears in the hero section (top right of the title block) and in the footer.
 - **Excel.** Added to the Overview sheet near cell F2. Other sheets don't carry a logo — Excel doesn't have a concept of page footers that's useful here.
+- **PDF.** Inherits the HTML placement, since it's a print render of the same page.
 
 ## Accessibility
 

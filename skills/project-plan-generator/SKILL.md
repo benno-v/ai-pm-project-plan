@@ -1,6 +1,6 @@
 ---
 name: project-plan-generator
-description: Generate a premium-editorial, client-ready project plan package — Gantt chart, milestone tracker, and status snapshot — in three synchronised formats (Excel .xlsx, interactive HTML, PowerPoint .pptx). Use this skill whenever a project manager asks for a project plan, Gantt chart, milestone tracker, client-ready schedule, or a "where is the project at?" update artefact. Trigger when the user wants to turn a brief, a Monday.com / ClickUp / Jira / Asana / Linear board, or an unstructured list of tasks into a clean, client-facing project plan. Trigger when the user mentions "project plan starter pack", "client project plan", or references the T11 article on using Claude Cowork to generate a client project plan.
+description: Generate a premium-editorial, client-ready project plan package — Gantt chart, milestone tracker, and status snapshot — in four synchronised formats (Excel .xlsx, interactive HTML, PowerPoint .pptx, PDF). Use this skill whenever a project manager asks for a project plan, Gantt chart, milestone tracker, client-ready schedule, or a "where is the project at?" update artefact. Trigger when the user wants to turn a brief, a Monday.com / ClickUp / Jira / Asana / Linear board, or an unstructured list of tasks into a clean, client-facing project plan. Trigger when the user mentions "project plan starter pack", "client project plan", or references the T11 article on using Claude Cowork to generate a client project plan.
 license: MIT. LICENSE in plugin root has complete terms.
 ---
 
@@ -8,7 +8,7 @@ license: MIT. LICENSE in plugin root has complete terms.
 
 ## Purpose
 
-Produce a premium-editorial project plan package from a structured brief or live PM-tool data. One skill, three artefacts, one consistent visual language across every format. Built so a project manager can go from a Monday.com board (or a written brief) to a client-ready status update in under fifteen minutes, with validation built in.
+Produce a premium-editorial project plan package from a structured brief or live PM-tool data. One skill, four artefacts, one consistent visual language across every format. Built so a project manager can go from a Monday.com board (or a written brief) to a client-ready status update in under fifteen minutes, with validation built in.
 
 This skill is opinionated. It enforces a single project plan structure anchored to three PMBOK 8th Edition performance domains — Planning, Measurement, Delivery — so every plan tells the same kind of story: where we are, where we're going, and what needs a decision. Change the project, not the structure.
 
@@ -19,13 +19,13 @@ Trigger this skill when the user says any of the following (non-exhaustive):
 - "Create a project plan for [project]"
 - "Generate a Gantt chart for this work"
 - "Pull the current data from my Monday.com board and produce a client project plan"
-- "Make me a project plan in Excel / HTML / PowerPoint"
+- "Make me a project plan in Excel / HTML / PowerPoint / PDF"
 - "I need a client-ready version of this schedule"
 - "Use the Project Plan Starter Pack"
 - "Turn this brief into a full project plan package"
 - "Give the client an update on where the project is at"
 
-A request for "a project plan" defaults to the full package — all three formats, generated in parallel, driven by a single plan JSON.
+A request for "a project plan" defaults to the full package — all four formats, generated in parallel, driven by a single plan JSON. A request that explicitly asks for PDF always includes `generate_pdf.py` in that run.
 
 Do not trigger for general project-management advice, status reports, programme governance, RACI matrices, WBS hierarchies, risk registers, or stakeholder communications. Those live in other skills or artefacts. This skill produces **client-facing plan artefacts**: a Gantt-led story of the schedule, the milestones, and anything that needs a decision.
 
@@ -45,39 +45,44 @@ Before generating anything, confirm the following are available. If any are miss
 
 **Brand inputs (optional but recommended).** A primary hex colour, an accent hex colour, a logo file path, and optional display/body font names. If nothing is supplied, fall back to the editorial default (deep navy `#0B2545`, warm gold `#C49A3A`, Georgia + Calibri). Note the absence in your summary to the user.
 
-**Output scope.** Which formats to produce. Default: all three (xlsx, HTML, pptx). Honour the user's scoping if they narrow it to one format.
+**Output scope.** Which formats to produce. Default: all four (xlsx, HTML, pptx, PDF). Honour the user's scoping if they narrow it to one format — but if they ask for PDF, always produce PDF, never substitute HTML or PPTX for it.
 
 ## Outputs
 
-Three synchronised artefacts, all driven by the same plan JSON:
+Four synchronised artefacts, all driven by the same plan JSON:
 
-**PowerPoint (.pptx).** 16:9 premium-editorial deck. Slides: Cover, Executive snapshot, Timeline overview, Detail Gantt, Milestones, Next 14 days, Review needed (only if `flags` has entries), Handover. Every slide carries a muted footer with optional logo, project signature, and page counter. All visuals are shape-based (no tables) for pixel control.
+**PowerPoint (.pptx).** 16:9 premium-editorial deck. Slides: Cover, Executive snapshot, Timeline overview, Detail Gantt, Milestones, Next 14 days, Review needed (only if `flags` has entries), Handover. Every slide carries a muted footer with optional logo, project signature, and page counter. All visuals are shape-based (no tables) for pixel control. The Timeline overview and Detail Gantt slides both carry a dedicated milestones row — every milestone renders as a status-coloured diamond directly on the schedule, not just on its own slide.
 
-**HTML (single-file).** Self-contained, print-friendly, interactive-ready page. Sections: hero + snapshot cards, status pull-quote, SVG Gantt, milestone timeline + cards, review needed (conditional), footer. Loads Google Fonts via CDN; logo embedded as base64. Opens directly in any browser.
+**HTML (single-file).** Self-contained, dependency-free page — no Google Fonts or other CDN by default (pure system font stack; set `brand.web_fonts: true` to opt into Fraunces/Inter), so it renders identically offline and inside sandboxed preview iframes that block external requests. Responsive from ~600px wide up to full desktop: the SVG Gantt and milestone timeline scroll horizontally rather than compressing text into illegibility, snapshot cards and milestone cards reflow at narrow widths, and labels sit outside short bars so nothing overlaps. Sections: hero + snapshot cards, status pull-quote, SVG Gantt (with its own milestones row — diamonds on the schedule, coloured by status, with collision-avoided date labels), milestone timeline + cards, review needed (conditional), footer. Carries a `@media print` stylesheet (A4 landscape by default) that `generate_pdf.py` reuses. Logo embedded as base64. Opens directly in any browser.
 
-**Excel (.xlsx).** Editorial-quality workbook for PMs who want to dig into the data. Sheets: Overview (hero + snapshot cards), Gantt (weekly Monday-aligned columns with progress fills and TODAY marker), Milestones (status-chipped table), Review needed (only if `flags` has entries). Gridlines off, generous row heights, Calibri body.
+**Excel (.xlsx).** Editorial-quality workbook for PMs who want to dig into the data. Sheets: Overview (hero + snapshot cards), Gantt (weekly Monday-aligned columns with progress fills, TODAY marker, and a "Milestones" block at the top of the schedule — one row per milestone with a ◆ marker dropped into its week column, plus a cell comment with the full name/date), Milestones (status-chipped table), Review needed (only if `flags` has entries). Gridlines off, generous row heights, Calibri body.
 
-All three are driven by `assets/sample-outputs/sample-plan.json`, which is also the authoritative schema reference — see `references/gantt-layout.md`.
+**PDF (.pdf).** Print-quality render of the HTML page's `@media print` stylesheet — same Gantt, same milestones, same brand — defaulting to A4 landscape (`--size`/`--orientation` flags support Letter/portrait). Tries WeasyPrint first, falls back to headless Chrome/Chromium `--print-to-pdf`, then to LibreOffice converting the PPTX deck (lower-fidelity: 16:9, not A4/Letter) if neither is available. Fails loudly with install instructions if none of the three are present — it never silently skips the PDF.
+
+All four are driven by `assets/sample-outputs/sample-plan.json`, which is also the authoritative schema reference — see `references/gantt-layout.md`.
+
+**If the user asks for PDF in any form, always run `generate_pdf.py`** — do not substitute HTML or PPTX and call it done. Before finishing, explicitly confirm every format the user actually asked for was generated and written to disk (not just that the command exited 0).
 
 ## How to run
 
-The three generators live in `scripts/` and share the `brand.py` palette module:
+The four generators live in `scripts/` and share the `brand.py` palette module:
 
 ```bash
 python scripts/generate_pptx.py --plan plan.json --out plan.pptx
 python scripts/generate_html.py --plan plan.json --out plan.html
 python scripts/generate_xlsx.py --plan plan.json --out plan.xlsx
+python scripts/generate_pdf.py  --plan plan.json --out plan.pdf   # --size A4|Letter --orientation landscape|portrait
 ```
 
-Each generator is independently runnable — pass the same `plan.json` to all three and you get three views of the same plan.
+Each generator is independently runnable — pass the same `plan.json` to all four and you get four views of the same plan. `generate_pdf.py` internally renders the same HTML that `generate_html.py` produces, so there's nothing extra to regenerate first.
 
 Dependencies:
 
 ```bash
-pip install python-pptx>=0.6.21 openpyxl>=3.1 Pillow>=10
+pip install python-pptx>=0.6.21 openpyxl>=3.1 Pillow>=10 weasyprint>=60
 ```
 
-No other third-party packages are needed — the HTML generator is pure Python string templating with an inline SVG Gantt.
+`weasyprint` is the preferred PDF renderer and the only dependency with a native-library footprint (Pango/Cairo). If it can't be installed in the environment, `generate_pdf.py` falls back automatically to a Chrome/Chromium binary already on PATH, then to a LibreOffice (`soffice`) binary — install whichever is available. No other third-party packages are needed for HTML — it's pure Python string templating with an inline SVG Gantt.
 
 ## Workflow
 
@@ -86,8 +91,8 @@ No other third-party packages are needed — the HTML generator is pure Python s
 3. **Assign owners as roles.** Use "Architect", "Contractor", "PM" — not named people. Keeps the plan portable across staffing changes.
 4. **Review milestones.** Every milestone must pass the three-test rule in `references/milestone-tracker.md`: zero-duration, externally observable, decision-worthy. Aim for 6–10 per project.
 5. **Set flags.** For any at-risk milestone or task, add a `flags` entry naming the decision the client needs to take.
-6. **Run all three generators.** Pass the plan JSON to `generate_pptx.py`, `generate_html.py`, and `generate_xlsx.py`.
-7. **Deliver.** Put the three files in the client workspace and link via `computer://` URLs.
+6. **Run the requested generators.** Default is all four (`generate_pptx.py`, `generate_html.py`, `generate_xlsx.py`, `generate_pdf.py`) against the same plan JSON; honour the user's scoping if they narrow it. If PDF was requested in any form, run `generate_pdf.py` — never substitute another format for it.
+7. **Confirm delivery.** Before telling the user you're done, check that every format they asked for actually exists on disk (non-zero size) — not just that the generator command exited without error. Put the files in the client workspace and link via `computer://` URLs.
 
 ## PMBOK alignment
 
@@ -103,13 +108,14 @@ Before delivering to a client, check:
 - **Milestone discipline.** Every milestone passes the three-test rule; at-risk milestones have matching flag entries.
 - **Client visibility.** Nothing internal is marked `client_visible: true`.
 - **Brand sanity.** Primary and accent colours have enough contrast; display font is installed on the rendering machine (or one of the fonts bundled by the format).
+- **Format delivery.** Every format the user asked for was actually generated and written to disk — check file existence, not just a clean exit code. If PDF was requested, confirm `generate_pdf.py` ran (not a substitute format) and note which renderer it used (WeasyPrint / Chrome / LibreOffice fallback).
 
 ## References
 
 - `references/gantt-layout.md` — the plan JSON schema and Gantt rendering rules.
 - `references/milestone-tracker.md` — what qualifies as a milestone and how they render.
 - `references/pmbok-mapping.md` — the three-domain mapping and what's intentionally out of scope.
-- `references/brand-system.md` — how colours, fonts, and the logo flow through the three formats.
+- `references/brand-system.md` — how colours, fonts, and the logo flow through all four formats.
 - `references/visual-design-principles.md` — the premium-editorial principles the artefacts obey.
 
 ## AI limitations to flag
@@ -118,7 +124,7 @@ When using this skill, the following caveats apply and should be flagged honestl
 
 - **The generators do not draw dependency arrows** yet. `depends_on` is stored in the plan but not visualised — the Gantt shows sequence through dates, not explicit arrows.
 - **Progress is not recalculated from dates.** The `progress` field is taken verbatim from the plan. If you pull data from a PM tool, make sure the tool's progress field is accurate before generating.
-- **Fonts are rendered as-installed.** If the display font you specify is not available on the reader's machine, the format will substitute. For bulletproof portability across clients, stick to the defaults (Georgia / Calibri / Fraunces / Inter).
+- **Fonts are rendered as-installed.** If the display font you specify is not available on the reader's machine, the format will substitute. HTML defaults to a system font stack (no webfont download) for portability; set `brand.web_fonts: true` if you want Fraunces/Inter loaded from Google Fonts instead, at the cost of an external dependency.
 - **The logo is never validated.** If the supplied file is too large or off-brand, the artefacts won't notice — that check is on the PM.
 - **Human oversight is required on status.** Claude can generate the plan, but the status values, progress fractions, and flag reasons need a human PM's judgement before they ship to a client.
 
